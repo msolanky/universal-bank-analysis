@@ -1,0 +1,57 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn import tree
+from sklearn.tree import DecisionTreeClassifier
+import matplotlib.pyplot as plt
+from sklearn import metrics
+
+# The target variable is Personal Loan. A "O" in that column means that an individual did not take a loan, and a "1"
+# in that column means that an individual did take a loan. We are trying to predict whether an individual will
+# take a loan or not.
+
+# reading csv into a dataframe
+universalBank = pd.read_csv('UniversalBank.csv')
+# ignoring these columns by dropping them out of the dataframe
+universalBank.drop(['Row', 'ZIP Code'], axis=1, inplace=True)
+# printing updated data frame
+print(universalBank)
+
+# defining the features as X and the target as y
+# Personal Loan column is column #8 with the two columns from above dropped
+X = universalBank.iloc[:, universalBank.columns != 'Personal Loan']
+y = universalBank.iloc[:, 7]
+# partitioning data using 75/25, specified random state, and stratify=y
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=2021, stratify=y)
+
+# summing the number of people in training partition that accepted a loan
+print((y_train == 1).sum())
+# 360 people in the training partition accepted a loan.
+
+# building a decision tree and plotting it
+dt = DecisionTreeClassifier(criterion='entropy', max_depth=5, random_state=2021)
+dt.fit(X_train, y_train)
+y_pred = dt.predict(X_test)
+fn = X.columns
+# plt.figure(figsize=(20, 20))
+classList = list(map(str, dt.classes_.tolist()))
+tree.plot_tree(dt, feature_names=fn, class_names=classList, filled=True, fontsize=5)
+plt.show()
+
+# creating a confusion matrix
+cf = metrics.confusion_matrix(y_test, y_pred)
+# printing and plotting the confusion matrix
+print(cf)
+metrics.plot_confusion_matrix(dt, X_test, y_test)
+plt.show()
+# Looking at the confusion matrix, the model classified 12 acceptors as non-acceptors.
+# Looking at the confusion matrix, the model classified 6 non-acceptors as acceptors.
+
+# determining accuracy score of training partition
+y_pred1 = dt.predict(X_train)
+print(metrics.accuracy_score(y_train, y_pred1))
+# The accuracy score of the training partition is 0.9888.
+
+# determining accuracy score of testing partition
+print(metrics.accuracy_score(y_test, y_pred))
+# The accuracy score of the testing partition is 0.9856.
+
